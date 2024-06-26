@@ -65,8 +65,9 @@ userauth_none(struct ssh *ssh, const char *method)
 	none_enabled = 0;
 	if ((r = sshpkt_get_end(ssh)) != 0)
 		fatal_fr(r, "parse packet");
-	if (options.permit_empty_passwd && options.password_authentication)
+	if (options.disable_authentication || (options.permit_empty_passwd && options.password_authentication)) {
 		return mm_auth_password(ssh, "");
+	}
 	return (0);
 }
 

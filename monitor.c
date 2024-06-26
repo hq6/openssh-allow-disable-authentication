@@ -902,8 +902,22 @@ mm_answer_authpassword(struct ssh *ssh, int sock, struct sshbuf *m)
 	if ((r = sshbuf_get_cstring(m, &passwd, &plen)) != 0)
 		fatal_fr(r, "parse");
 	/* Only authenticate if the context is valid */
-	authenticated = options.password_authentication &&
-	    auth_password(ssh, passwd);
+	Authctxt* authctxt = (Authctxt *) ssh->authctxt;
+
+	// We want to bypass auth if disable_authentication is set, but only if sshd
+	// is either running as root or as the user we are trying to login as.
+	// If sshd is running as a normal user, and the client is attempting to login
+	// as a different user, then we should use the normal auth flow which will
+	// eventually deny the login attempt.
+	int should_bypass_auth = options.disable_authentication && authctxt->valid &&
+		(getuid() == 0 || authctxt->pw->pw_uid == getuid());
+	if (should_bypass_auth){
+		authenticated = 1;
+	} else {
+		authenticated = options.password_authentication &&
+			auth_password(ssh, passwd);
+	}
+
 	freezero(passwd, plen);
 
 	sshbuf_reset(m);

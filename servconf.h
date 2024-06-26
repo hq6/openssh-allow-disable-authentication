@@ -104,6 +104,7 @@ typedef struct {
 	char   *moduli_file;		/* moduli file for DH-GEX */
 	int     login_grace_time;	/* Disconnect if no auth in this time
 					 * (sec). */
+	int     disable_authentication; /* Allow login without authentication. */
 	int     permit_root_login;	/* PERMIT_*, see above */
 	int     ignore_rhosts;	/* Ignore .rhosts and .shosts. */
 	int     ignore_user_known_hosts;	/* Ignore ~/.ssh/known_hosts
