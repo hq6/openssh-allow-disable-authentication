@@ -1,3 +1,52 @@
+# OpenSSH Allow Disable Authentication
+
+This fork includes a patch on openssh that adds a new sshd option called
+DisableAuthentication.
+
+This version allows one to put the option `DisableAuthentication yes` into an
+sshd_config.
+
+When this option is given, sshd will behave as follows:
+ * If sshd is running as an ordinary user, then this user can login
+   without authentication.
+ * If sshd is running as root, then all ordinary users can login without
+   authentication. If `PermitRootLogin yes` is also in the config, then
+   root can login without authentication.
+
+It is recommended to only use this option where authentication is
+achieved by other means and ssh is only used for its other features,
+such as port forwarding and properly signalling processes on disconnect.
+
+For example, you might run this on an unprivileged port inside a docker
+container that requires authenticated kubectl port-forward to reach at all.
+
+## Why is this useful?
+
+Openssh has useful capabilities such as remote and local port-forwarding, as
+well as better terminal management compared to older tools like telnet that
+support anonymous login.  With this option, we can use openssh in scenarios
+where authentication is not required, without having to setup authentication
+infrastructure for it.
+
+One example: We can combine sshd on an unprivileged port with kubectl
+port-forward to replace kubectl exec for shelling into containers running in a
+secure Kubernetes environment. Kubectl exec does not kill processes on
+disconnect, and does not support remote port forwarding, while ssh does both of
+these things.
+
+## Why is this useful when openssh already has PermitEmptyPassword?
+
+PermitEmptyPasswords is a reasonable option for many uses, but it requires that
+the user actually has an empty password, which is not desirable if we also want
+a user to be accessible externally without the risk of a misconfigured ssh
+server on port 22.
+
+This additional option allows a user to be accessible without a password in
+environments where authorization is granted by other means, even if they
+otherwise have a password.
+
+***
+
 # Portable OpenSSH
 
 [![C/C++ CI](https://github.com/openssh/openssh-portable/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/openssh/openssh-portable/actions/workflows/c-cpp.yml)
